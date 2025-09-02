@@ -72,3 +72,11 @@ pub fn main(allocator: std.mem.Allocator) !void {
     }
     std.debug.print("Channel closed\n", .{});       
 }
+
+
+
+test "tcpListener test" {
+    // const allocator = std.testing.allocator;
+
+    try std.testing.expectEqual("Test Active", "Test Active");
+}

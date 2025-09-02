@@ -2,3 +2,4 @@
 .zig-cache
 zig-out
 message.txt
+strings.zig
