@@ -1,10 +1,10 @@
 const std = @import("std");
-const HteateaP = @import("HteateaP");
+const Htea = @import("HTea");
 
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
-    try HteateaP.main(allocator);
+    try Htea.main(allocator);
 }

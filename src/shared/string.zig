@@ -4,16 +4,15 @@ pub const String = struct {
     allocator: std.mem.Allocator,
 
     pub const Error = error{
-        OUT_OF_MEMORY,
+        OUT_OF_MEMORY_ERROR,
         SPLIT_ERROR,
-        INVALID_INDEX,
     };
 
     const Self = @This();
 
     pub fn init(allocator: std.mem.Allocator) !*Self {
         const s = allocator.create(Self) catch {
-            return Error.OUT_OF_MEMORY;
+            return Error.OUT_OF_MEMORY_ERROR;
         };
         s.* = .{
             .allocator = allocator,
@@ -60,10 +59,14 @@ pub const String = struct {
         var buffer = std.ArrayList(u8).init(self.allocator);
 
         for (content) |c| {
-            try buffer.append(std.ascii.toUpper(c));
+            buffer.append(std.ascii.toUpper(c)) catch {
+                return Error.OUT_OF_MEMORY_ERROR;
+            };
         }
 
-        return try buffer.toOwnedSlice();
+        return buffer.toOwnedSlice() catch {
+                return Error.OUT_OF_MEMORY_ERROR;
+            };
     }
 
     pub fn toLowerCaseAlloc(
@@ -73,10 +76,14 @@ pub const String = struct {
         var buffer = std.ArrayList(u8).init(self.allocator);
 
         for (content) |c| {
-            try buffer.append(std.ascii.toLower(c));
+            buffer.append(std.ascii.toLower(c)) catch {
+                return Error.OUT_OF_MEMORY_ERROR;
+            };
         }
 
-        return try buffer.toOwnedSlice();
+        return buffer.toOwnedSlice() catch {
+                return Error.OUT_OF_MEMORY_ERROR;
+            };
     }
 
     pub fn trim(_: *Self, content: []const u8, value: ?[]const u8) []const u8 {
@@ -93,10 +100,14 @@ pub const String = struct {
         var tokens = std.mem.splitSequence(u8, content, literal);
 
         while (tokens.next()) |t| {
-            try parts.append(t);
+            parts.append(t) catch {
+                return Error.OUT_OF_MEMORY_ERROR;
+            };
         }
 
-        return parts.toOwnedSlice();
+        return parts.toOwnedSlice() catch {
+                return Error.OUT_OF_MEMORY_ERROR;
+            };
     }
 
     pub fn contains(_: *Self, content: []const u8, literal: []const u8) bool {
@@ -110,7 +121,7 @@ pub const String = struct {
     pub fn replaceAlloc(self: *Self, content: []const u8, literal: []const u8, replacement: []const u8) ![]const u8 {
         const size = std.mem.replacementSize(u8, content[0..], literal, replacement);
         var buffer = self.allocator.alloc(u8, size) catch {
-            return Self.Error.OUT_OF_MEMORY;
+            return Error.OUT_OF_MEMORY_ERROR;
         };
         _ = std.mem.replace(u8, content, literal, replacement, buffer[0..]);
         return buffer;

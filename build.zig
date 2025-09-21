@@ -8,7 +8,7 @@ pub fn build(b: *std.Build) void {
    
     const optimize = b.standardOptimizeOption(.{});
     
-    const mod = b.addModule("HteateaP", .{
+    const mod = b.addModule("HTea", .{
         
         .root_source_file = b.path("src/root.zig"),
         .target = target,
@@ -16,7 +16,7 @@ pub fn build(b: *std.Build) void {
 
 
     const exe = b.addExecutable(.{
-        .name = "HteateaP",
+        .name = "HTea",
         .root_module = b.createModule(.{
 
             .root_source_file = b.path("src/main.zig"),
@@ -25,7 +25,7 @@ pub fn build(b: *std.Build) void {
             .optimize = optimize,
 
             .imports = &.{
-                .{ .name = "HteateaP", .module = mod },
+                .{ .name = "HTea", .module = mod },
             },
         }),
     });

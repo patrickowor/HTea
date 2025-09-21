@@ -10,7 +10,6 @@ const RequestState = enum {
 
 pub const RequestError  = error {
     MALFORMED_REQUEST_LINE,
-    OUT_OF_MEMORY_ERROR,
 } || Str.Error;
 
 const  RequestLine = struct {
@@ -71,6 +70,10 @@ pub const Request = struct {
         self.request_line.deinit();
         self.allocator.destroy(self);
     }
+
+    pub fn parse(buffer: []const u8) !usize {
+        _ = buffer;
+    }
 };
 
 pub fn parseRequestLine(allocator: Allocator, line: []u8) RequestError!*RequestLine {
@@ -79,9 +82,7 @@ pub fn parseRequestLine(allocator: Allocator, line: []u8) RequestError!*RequestL
     };
     defer String.deinit();
 
-    const parts = String.splitAlloc(line," ") catch {
-        return RequestError.MALFORMED_REQUEST_LINE;
-    };
+    const parts = try String.splitAlloc(line," ");
     defer allocator.free(parts);
 
     if (parts.len != 3 ) {
@@ -102,16 +103,50 @@ pub fn requestFromReader(allocator: Allocator, reader: *std.io.AnyReader) Reques
     };
     defer String.deinit();
 
-
-
-
-    var buffer = std.ArrayList(u8).init(allocator);
-    defer buffer.deinit();
-
-    reader.readAllArrayList(&buffer, max_size) catch |err|{
-        std.debug.print("error: {}", .{err});
+    var buffer =  std.ArrayList(u8).initCapacity(allocator, max_size) catch {
         return RequestError.OUT_OF_MEMORY_ERROR;
     };
+    var bufferLen: usize = 0;
+    defer buffer.deinit();
+    buffer.expandToCapacity();
+    buffer.items.len = max_size;
+    @memset(buffer.items, undefined);
+    // buffer.ensureTotalCapacity(max_size) catch {
+    //     return RequestError.OUT_OF_MEMORY_ERROR;
+    // };
+
+    while (true) {
+        const n = reader.read(buffer.items[bufferLen..max_size]) catch {
+            return RequestError.OUT_OF_MEMORY_ERROR;
+        };
+
+        if (n < 0) {
+            break;
+        }
+
+        bufferLen += n;
+        const readN = try Request.parse(buffer.items[0..bufferLen]);
+
+
+        // copy all the remaining unparsed items back to start of the buffer
+        // find the defrence and clear all the values at the remaining 
+        // part of the buffer  
+        @memcpy(buffer.items[0..max_size], buffer.items[readN..bufferLen]);
+        bufferLen -= readN;
+        @memset(buffer.items[bufferLen..max_size], undefined);
+        
+    }
+
+
+
+
+    // var buffer = std.ArrayList(u8).init(allocator);
+    // defer buffer.deinit();
+
+    // reader.readAllArrayList(&buffer, max_size) catch |err|{
+    //     std.debug.print("error: {}", .{err});
+    //     return RequestError.OUT_OF_MEMORY_ERROR;
+    // };
 
 
     var sep: []const u8  = "\r\n";
