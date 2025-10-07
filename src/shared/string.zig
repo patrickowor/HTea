@@ -56,15 +56,15 @@ pub const String = struct {
         self: *Self,
         content: []const u8,
     ) ![]const u8 {
-        var buffer = std.ArrayList(u8).init(self.allocator);
+        var buffer = std.ArrayList(u8){};
 
         for (content) |c| {
-            buffer.append(std.ascii.toUpper(c)) catch {
+            buffer.append(self.allocator, std.ascii.toUpper(c)) catch {
                 return Error.OUT_OF_MEMORY_ERROR;
             };
         }
 
-        return buffer.toOwnedSlice() catch {
+        return buffer.toOwnedSlice(self.allocator) catch {
                 return Error.OUT_OF_MEMORY_ERROR;
             };
     }
@@ -73,15 +73,15 @@ pub const String = struct {
         self: *Self,
         content: []const u8,
     ) ![]const u8 {
-        var buffer = std.ArrayList(u8).init(self.allocator);
+        var buffer = std.ArrayList(u8){};
 
         for (content) |c| {
-            buffer.append(std.ascii.toLower(c)) catch {
+            buffer.append(self.allocator, std.ascii.toLower(c)) catch {
                 return Error.OUT_OF_MEMORY_ERROR;
             };
         }
 
-        return buffer.toOwnedSlice() catch {
+        return buffer.toOwnedSlice(self.allocator) catch {
                 return Error.OUT_OF_MEMORY_ERROR;
             };
     }
@@ -95,19 +95,23 @@ pub const String = struct {
     }
 
     pub fn splitAlloc(self: *Self, content: []const u8, literal: []const u8) ![][]const u8 {
-        var parts = std.ArrayList([]const u8).init(self.allocator);
+        var parts = std.ArrayList([]const u8){};
 
         var tokens = std.mem.splitSequence(u8, content, literal);
 
         while (tokens.next()) |t| {
-            parts.append(t) catch {
+            parts.append(self.allocator, t) catch {
                 return Error.OUT_OF_MEMORY_ERROR;
             };
         }
 
-        return parts.toOwnedSlice() catch {
+        return parts.toOwnedSlice(self.allocator) catch {
                 return Error.OUT_OF_MEMORY_ERROR;
             };
+    }
+
+    pub fn indexOf(_: *Self, content: []const u8, literal: []const u8) bool {
+        return std.mem.indexOf(u8, content, literal);
     }
 
     pub fn contains(_: *Self, content: []const u8, literal: []const u8) bool {

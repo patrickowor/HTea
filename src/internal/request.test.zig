@@ -7,8 +7,7 @@ const RequestError = RequestLib.RequestError;
 
 test "read succesful get request from reader" {
     const allocator = testing.allocator;
-    var stream = std.io.fixedBufferStream("GET / HTTP/1.1\r\nHost: localhost:42069\r\nUser-Agent: curl/7.81.0\r\nAccept: */*\r\n\r\n");
-    var reader = stream.reader().any();
+    var reader = std.Io.Reader.fixed("GET / HTTP/1.1\r\nHost: localhost:42069\r\nUser-Agent: curl/7.81.0\r\nAccept: */*\r\n\r\n");
 
     var request = try RequestLib.requestFromReader(allocator,&reader);
     defer request.deinit();
@@ -21,8 +20,7 @@ test "read succesful get request from reader" {
 
 test "read succesful get request with path from reader" {
     const allocator = testing.allocator;
-    var stream = std.io.fixedBufferStream("GET /coffee HTTP/1.1\r\nHost: localhost:42069\r\nUser-Agent: curl/7.81.0\r\nAccept: */*\r\n\r\n");
-    var reader = stream.reader().any();
+    var reader = std.Io.Reader.fixed("GET /coffee HTTP/1.1\r\nHost: localhost:42069\r\nUser-Agent: curl/7.81.0\r\nAccept: */*\r\n\r\n");
 
     var request = try RequestLib.requestFromReader(allocator,&reader);
     defer request.deinit();
@@ -35,8 +33,7 @@ test "read succesful get request with path from reader" {
 test "read failing get request from reader" {
 
     const allocator = testing.allocator;
-    var stream = std.io.fixedBufferStream("/coffee HTTP/1.1\r\nHost: localhost:42069\r\nUser-Agent: curl/7.81.0\r\nAccept: */*\r\n\r\n");
-    var reader = stream.reader().any();
+    var reader = std.Io.Reader.fixed("/coffee HTTP/1.1\r\nHost: localhost:42069\r\nUser-Agent: curl/7.81.0\r\nAccept: */*\r\n\r\n");
 
     try testing.expectError(RequestError.MALFORMED_REQUEST_LINE, RequestLib.requestFromReader(allocator,&reader));
 }
